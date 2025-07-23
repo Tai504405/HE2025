@@ -9,9 +9,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String name;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String email;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String password;
+
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String role; // USER, DRIVER, ADMIN
 
     public User() {

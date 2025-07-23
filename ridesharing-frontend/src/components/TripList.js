@@ -53,7 +53,7 @@ function TripList({ userId }) {
         <ul>
           {trips.map((trip) => (
             <li key={trip.id} style={{ marginBottom: '10px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>
-              <strong>{trip.origin}</strong> → <strong>{trip.destination}</strong><br />
+              <span><b>Từ {trip.origin} đến {trip.destination}</b></span><br />
               {trip.originLat && trip.originLng && (
                 <span style={{ fontSize: '12px', color: '#666' }}>
                   Tọa độ đi: {trip.originLat.toFixed(6)}, {trip.originLng.toFixed(6)}<br />

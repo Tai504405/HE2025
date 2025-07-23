@@ -9,11 +9,26 @@ public class Vehicle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String licensePlate;
-    private int seats;
-    private String type;
-    private String status;
-    private Long ownerId;
+    @Column(columnDefinition = "NVARCHAR(50)")
+    private String vehicleCode; // Mã xe (VD: BUS001)
+
+    @Column(columnDefinition = "NVARCHAR(20)")
+    private String licensePlate; // Biển số
+
+    private int seats; // Sức chứa
+
+    @Column(columnDefinition = "NVARCHAR(100)")
+    private String type; // Loại xe
+
+    @Column(columnDefinition = "NVARCHAR(50)")
+    private String status; // Tình trạng: ACTIVE, MAINTENANCE, BROKEN
+
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String notes; // Ghi chú
+
+    @ManyToOne
+    @JoinColumn(name = "driver_id")
+    private User driver; // Tài xế phụ trách
 
     // Getters and setters
     public Long getId() {
@@ -22,6 +37,14 @@ public class Vehicle {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getVehicleCode() {
+        return vehicleCode;
+    }
+
+    public void setVehicleCode(String vehicleCode) {
+        this.vehicleCode = vehicleCode;
     }
 
     public String getLicensePlate() {
@@ -56,26 +79,29 @@ public class Vehicle {
         this.status = status;
     }
 
-    public Long getOwnerId() {
-        return ownerId;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public User getDriver() {
+        return driver;
+    }
+
+    public void setDriver(User driver) {
+        this.driver = driver;
     }
 
     public Vehicle() {
     }
 
-    public Vehicle(String licensePlate, int seats) {
+    public Vehicle(String vehicleCode, String licensePlate, int seats) {
+        this.vehicleCode = vehicleCode;
         this.licensePlate = licensePlate;
         this.seats = seats;
-    }
-
-    public Vehicle(String licensePlate, String type, String status, Long ownerId) {
-        this.licensePlate = licensePlate;
-        this.type = type;
-        this.status = status;
-        this.ownerId = ownerId;
+        this.status = "ACTIVE";
     }
 }

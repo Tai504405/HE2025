@@ -2,6 +2,8 @@ package com.example.ridesharing.controller;
 
 import com.example.ridesharing.model.BusTrip;
 import com.example.ridesharing.repository.BusTripRepository;
+import com.example.ridesharing.repository.TripPlanRepository;
+import com.example.ridesharing.model.TripPlan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -12,13 +14,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/realtime")
 public class RealtimeController {
     @Autowired
     private BusTripRepository busTripRepository;
+
+    @Autowired
+    private TripPlanRepository tripPlanRepository;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -30,7 +35,34 @@ public class RealtimeController {
 
     @GetMapping("/drivers")
     public ResponseEntity<?> getAllDriverStates() {
-        return ResponseEntity.ok(driverStates.values());
+        // Xóa các driver không hoạt động (quá 30 giây)
+        long currentTime = System.currentTimeMillis();
+        driverStates.entrySet().removeIf(entry -> {
+            Map<String, Object> state = entry.getValue();
+            Long lastActive = (Long) state.get("lastActive");
+            return lastActive != null && (currentTime - lastActive) > 30000; // 30 giây
+        });
+        // Bổ sung origin từ TripPlan CONFIRMED
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> state : driverStates.values()) {
+            Object driverIdObj = state.get("driverId");
+            if (driverIdObj != null) {
+                try {
+                    Long driverId = Long.valueOf(driverIdObj.toString());
+                    List<TripPlan> plans = tripPlanRepository.findByDriverIdAndStatusIn(driverId,
+                            java.util.Arrays.asList("CONFIRMED"));
+                    if (!plans.isEmpty()) {
+                        // Lấy origin mới nhất từ TripPlan CONFIRMED
+                        state.put("origin", plans.get(0).getOrigin());
+                    } else {
+                        state.remove("origin");
+                    }
+                } catch (Exception ignore) {
+                }
+            }
+            result.add(state);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/driver/{driverId}/history")
@@ -72,21 +104,51 @@ public class RealtimeController {
         state.put("driverId", trip.getDriver() != null ? trip.getDriver().getId() : null);
         state.put("driverName", trip.getDriver() != null ? trip.getDriver().getName() : ("Tài xế " + tripId));
         state.put("lastActive", System.currentTimeMillis());
-        driverStates.put(tripId, state);
-        // Lưu log lịch sử
         Long driverId = trip.getDriver() != null ? trip.getDriver().getId() : null;
         if (driverId != null) {
+            driverStates.put(driverId, state);
             driverLogs.putIfAbsent(driverId, new ArrayList<>());
             driverLogs.get(driverId).add(new HashMap<>(state));
         }
         // Broadcast toàn bộ danh sách driver qua WebSocket
         messagingTemplate.convertAndSend("/topic/bus-location", driverStates.values());
+        // Broadcast cho admin
+        messagingTemplate.convertAndSend("/topic/admin-realtime", "reload");
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/trip/{tripId}/end")
     public ResponseEntity<?> endTrip(@PathVariable Long tripId) {
-        driverStates.remove(tripId);
+        // Xóa driver khỏi danh sách realtime
+        // Tìm driverId từ trip
+        Optional<BusTrip> tripOpt = busTripRepository.findById(tripId);
+        if (tripOpt.isPresent()) {
+            BusTrip trip = tripOpt.get();
+            Long driverId = trip.getDriver() != null ? trip.getDriver().getId() : null;
+            if (driverId != null)
+                driverStates.remove(driverId);
+            trip.setCurrentStatus("ENDED");
+            trip.setStatus("FINISHED");
+            trip.setEndedAt(LocalDateTime.now());
+            busTripRepository.save(trip);
+        }
+        // Broadcast cập nhật cho tất cả client
+        messagingTemplate.convertAndSend("/topic/bus-location", driverStates.values());
+        return ResponseEntity.ok().build();
+    }
+
+    // API để xóa driver khỏi danh sách realtime (khi đóng tab hoặc mất kết nối)
+    @DeleteMapping("/trip/{tripId}")
+    public ResponseEntity<?> removeTrip(@PathVariable Long tripId) {
+        // Xóa driver khỏi danh sách realtime
+        Optional<BusTrip> tripOpt = busTripRepository.findById(tripId);
+        if (tripOpt.isPresent()) {
+            BusTrip trip = tripOpt.get();
+            Long driverId = trip.getDriver() != null ? trip.getDriver().getId() : null;
+            if (driverId != null)
+                driverStates.remove(driverId);
+        }
+        // Broadcast cập nhật cho tất cả client
         messagingTemplate.convertAndSend("/topic/bus-location", driverStates.values());
         return ResponseEntity.ok().build();
     }

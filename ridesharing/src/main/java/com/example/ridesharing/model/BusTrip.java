@@ -22,6 +22,10 @@ public class BusTrip {
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
+    @ManyToOne
+    @JoinColumn(name = "shift_id")
+    private Shift shift; // Thêm reference đến Shift
+
     private String status; // WAITING, BOARDING, RUNNING, FINISHED
 
     @ManyToOne
@@ -36,6 +40,24 @@ public class BusTrip {
     private Double currentLat;
     private Double currentLng;
     private String currentStatus; // IDLE, READY, MOVING, ARRIVED, STOPPED
+
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String notes; // Ghi chú cho chuyến đi
+
+    private Boolean registrationLocked = false; // Khóa đăng ký
+
+    private Boolean driverConfirmed = false; // Tài xế đã xác nhận tham gia
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String origin; // Tên/mã điểm đi
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String destination; // Tên/mã điểm đến
+
+    private Double originLat;
+    private Double originLng;
+    private Double destinationLat;
+    private Double destinationLng;
 
     // Getters and setters
     public Long getId() {
@@ -68,6 +90,14 @@ public class BusTrip {
 
     public void setVehicle(Vehicle vehicle) {
         this.vehicle = vehicle;
+    }
+
+    public Shift getShift() {
+        return shift;
+    }
+
+    public void setShift(Shift shift) {
+        this.shift = shift;
     }
 
     public String getStatus() {
@@ -140,5 +170,77 @@ public class BusTrip {
 
     public void setCurrentStatus(String currentStatus) {
         this.currentStatus = currentStatus;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public Boolean getRegistrationLocked() {
+        return registrationLocked;
+    }
+
+    public void setRegistrationLocked(Boolean registrationLocked) {
+        this.registrationLocked = registrationLocked;
+    }
+
+    public Boolean getDriverConfirmed() {
+        return driverConfirmed;
+    }
+
+    public void setDriverConfirmed(Boolean driverConfirmed) {
+        this.driverConfirmed = driverConfirmed;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
+    public Double getOriginLat() {
+        return originLat;
+    }
+
+    public void setOriginLat(Double originLat) {
+        this.originLat = originLat;
+    }
+
+    public Double getOriginLng() {
+        return originLng;
+    }
+
+    public void setOriginLng(Double originLng) {
+        this.originLng = originLng;
+    }
+
+    public Double getDestinationLat() {
+        return destinationLat;
+    }
+
+    public void setDestinationLat(Double destinationLat) {
+        this.destinationLat = destinationLat;
+    }
+
+    public Double getDestinationLng() {
+        return destinationLng;
+    }
+
+    public void setDestinationLng(Double destinationLng) {
+        this.destinationLng = destinationLng;
     }
 }

@@ -1,9 +1,6 @@
 package com.example.ridesharing.model;
 
 import java.time.LocalDateTime;
-
-import com.example.ridesharing.model.Trip; // nếu Trip nằm trong package model
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,11 +14,17 @@ public class Trip {
     private Long id;
 
     private Long userId;
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String origin;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String destination;
+
     private LocalDateTime departureTime;
     private int seatCount;
     private Long vehicleId;
+
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String status; // VD: CREATED, STARTED, IN_PROGRESS, FINISHED
 
     // GPS coordinates
