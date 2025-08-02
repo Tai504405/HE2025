@@ -3,13 +3,16 @@ import React, { useState, useEffect } from 'react';
 function AdminUserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'USER'
+    confirmPassword: '',
+    role: 'DRIVER'
   });
   const [editingUser, setEditingUser] = useState(null);
+  const [showPasswords, setShowPasswords] = useState({});
 
   // Hàm load dữ liệu
   const loadData = async (showLoading = false) => {
@@ -49,23 +52,45 @@ function AdminUserManagement() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    
+    // Kiểm tra mật khẩu xác nhận
+    if (newUser.password !== newUser.confirmPassword) {
+      alert('Mật khẩu xác nhận không khớp!');
+      return;
+    }
+
+    // Kiểm tra độ dài mật khẩu
+    if (newUser.password.length < 6) {
+      alert('Mật khẩu phải có ít nhất 6 ký tự!');
+      return;
+    }
+
     try {
       setLoading(true);
+      const userData = {
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role
+      };
+
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(userData),
       });
 
       if (response.ok) {
-        setNewUser({ name: '', email: '', password: '', role: 'USER' });
+        setNewUser({ name: '', email: '', password: '', confirmPassword: '', role: 'DRIVER' });
+        setShowCreateForm(false);
         // Reload data sau khi tạo
         loadData(true);
         alert('Tạo tài khoản thành công!');
       } else {
-        alert('Lỗi khi tạo tài khoản!');
+        const errorData = await response.json();
+        alert(`Lỗi khi tạo tài khoản: ${errorData.message || 'Không xác định'}`);
       }
     } catch (error) {
       console.error('Lỗi:', error);
@@ -77,14 +102,38 @@ function AdminUserManagement() {
 
   const handleUpdateUser = async (e) => {
     e.preventDefault();
+    
+    // Kiểm tra mật khẩu xác nhận nếu có nhập mật khẩu mới
+    if (editingUser.newPassword && editingUser.newPassword !== editingUser.confirmPassword) {
+      alert('Mật khẩu xác nhận không khớp!');
+      return;
+    }
+
+    // Kiểm tra độ dài mật khẩu nếu có nhập mật khẩu mới
+    if (editingUser.newPassword && editingUser.newPassword.length < 6) {
+      alert('Mật khẩu phải có ít nhất 6 ký tự!');
+      return;
+    }
+
     try {
       setLoading(true);
+      const userData = {
+        name: editingUser.name,
+        email: editingUser.email,
+        role: editingUser.role
+      };
+
+      // Chỉ gửi mật khẩu mới nếu có nhập
+      if (editingUser.newPassword) {
+        userData.password = editingUser.newPassword;
+      }
+
       const response = await fetch(`/api/users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editingUser),
+        body: JSON.stringify(userData),
       });
 
       if (response.ok) {
@@ -138,8 +187,22 @@ function AdminUserManagement() {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>Quản lý tài khoản</h2>
+    <div className="container mt-4" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="mb-1">Quản lý tài khoản</h2>
+          <p className="text-muted mb-0">Quản lý và tạo tài khoản người dùng trong hệ thống</p>
+        </div>
+        {!showCreateForm && (
+          <button 
+            className="btn btn-primary"
+            onClick={() => setShowCreateForm(true)}
+          >
+            <i className="fas fa-plus me-2"></i>
+            Thêm tài khoản mới
+          </button>
+        )}
+      </div>
       
       {/* Loading indicator chỉ hiển thị khi thao tác thủ công */}
       {loading && (
@@ -149,62 +212,89 @@ function AdminUserManagement() {
       )}
       
       {/* Form tạo tài khoản mới */}
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5>Tạo tài khoản mới</h5>
+      {showCreateForm && (
+        <center><div className="card mb-4">
+          <div className="card-header">
+            <h3>Tạo tài khoản mới</h3>
+          </div>
+          <div className="card-body">
+            <form onSubmit={handleCreateUser}>
+              <div className="row">
+                <div className="col-md-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Họ tên"
+                    value={newUser.name}
+                    onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="col-md-3">
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="col-md-2">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Mật khẩu"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="col-md-2">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Xác nhận mật khẩu"
+                    value={newUser.confirmPassword}
+                    onChange={(e) => setNewUser({...newUser, confirmPassword: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="col-md-2">
+                  <select
+                    className="form-control"
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                  >
+                    <option value="DRIVER">Tài xế</option>
+                    <option value="ADMIN">Quản trị viên</option>
+                  </select>
+                </div>
+              </div>
+              <div className="row mt-3">
+                <div className="col-12">
+                  <div className="d-flex gap-2">
+                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                      {loading ? 'Đang tạo...' : 'Tạo tài khoản'}
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setNewUser({ name: '', email: '', password: '', confirmPassword: '', role: 'DRIVER' });
+                      }}
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
-        <div className="card-body">
-          <form onSubmit={handleCreateUser}>
-            <div className="row">
-              <div className="col-md-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Họ tên"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="col-md-3">
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="col-md-2">
-                <input
-                  type="password"
-                  className="form-control"
-                  placeholder="Mật khẩu"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="col-md-2">
-                <select
-                  className="form-control"
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-                >
-                  <option value="USER">Người dùng</option>
-                  <option value="DRIVER">Tài xế</option>
-                </select>
-              </div>
-              <div className="col-md-2">
-                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                  {loading ? 'Đang tạo...' : 'Tạo tài khoản'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+        </center>
+      )}
 
       {/* Danh sách tài khoản */}
       <div className="card">
@@ -213,14 +303,15 @@ function AdminUserManagement() {
         </div>
         <div className="card-body">
           <div className="table-responsive">
-            <table className="table table-striped">
+            <table className="table table-striped" style={{ width: '100%' }}>
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Họ tên</th>
-                  <th>Email</th>
-                  <th>Vai trò</th>
-                  <th>Thao tác</th>
+                  <th style={{ width: '8%' }}>ID</th>
+                  <th style={{ width: '20%' }}>Họ tên</th>
+                  <th style={{ width: '25%' }}>Email</th>
+                  <th style={{ width: '15%' }}>Vai trò</th>
+                  <th style={{ width: '12%' }}>Mật khẩu</th>
+                  <th style={{ width: '20%' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -258,12 +349,55 @@ function AdminUserManagement() {
                           value={editingUser.role}
                           onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
                         >
-                          <option value="USER">Người dùng</option>
                           <option value="DRIVER">Tài xế</option>
                           <option value="ADMIN">Quản trị viên</option>
                         </select>
                       ) : (
                         getRoleBadge(user.role)
+                      )}
+                    </td>
+                    <td>
+                      {editingUser?.id === user.id ? (
+                        <div className="d-flex align-items-center">
+                          <input
+                            type={showPasswords.edit ? 'text' : 'password'}
+                            className="form-control me-2"
+                            placeholder="Mật khẩu mới"
+                            value={editingUser.newPassword || ''}
+                            onChange={(e) => setEditingUser({...editingUser, newPassword: e.target.value})}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setShowPasswords({
+                              ...showPasswords,
+                              edit: !showPasswords.edit
+                            })}
+                          >
+                            <span title={showPasswords.edit ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}>
+                              {showPasswords.edit ? '👁️‍🗨️' : '👁️'}
+                            </span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="d-flex align-items-center">
+                          <span className="text-muted me-2">
+                            {showPasswords[user.id] ? user.password || '••••••' : '••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setShowPasswords({
+                              ...showPasswords,
+                              [user.id]: !showPasswords[user.id]
+                            })}
+                            style={{ padding: '2px 6px', fontSize: '12px' }}
+                          >
+                            <span title={showPasswords[user.id] ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}>
+                              {showPasswords[user.id] ? '👁️‍🗨️' : '👁️'}
+                            </span>
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td>
@@ -274,22 +408,26 @@ function AdminUserManagement() {
                             onClick={handleUpdateUser}
                             disabled={loading}
                           >
-                            <i className="fas fa-save"></i>
+                            <i className="fas fa-save"> lưu</i>
                           </button>
                           <button 
                             className="btn btn-sm btn-secondary"
                             onClick={() => setEditingUser(null)}
                           >
-                            <i className="fas fa-times"></i>
+                            <i className="fas fa-times"> hủy</i>
                           </button>
                         </div>
                       ) : (
                         <div className="btn-group" role="group">
                           <button 
                             className="btn btn-sm btn-warning"
-                            onClick={() => setEditingUser(user)}
+                            onClick={() => setEditingUser({
+                              ...user,
+                              newPassword: '',
+                              confirmPassword: ''
+                            })}
                           >
-                            <i className="fas fa-edit"></i>
+                            <i className="fas fa-edit"> sửa</i>
                           </button>
                           {user.role !== 'ADMIN' && (
                             <button 
@@ -297,7 +435,7 @@ function AdminUserManagement() {
                               onClick={() => handleDeleteUser(user.id)}
                               disabled={loading}
                             >
-                              <i className="fas fa-trash"></i>
+                              <i className="fas fa-trash"> xóa</i>
                             </button>
                           )}
                         </div>
@@ -310,6 +448,8 @@ function AdminUserManagement() {
           </div>
         </div>
       </div>
+
+      
     </div>
   );
 }

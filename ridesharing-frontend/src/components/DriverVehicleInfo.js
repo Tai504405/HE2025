@@ -114,6 +114,7 @@ function DriverVehicleInfo() {
   }
 
   return (
+    <center>
     <div className="container mt-4">
       <h2>Thông tin phương tiện được phân công</h2>
       <h4>Xin chào, {user.name}!</h4>
@@ -150,16 +151,10 @@ function DriverVehicleInfo() {
                   
                   <div className="mt-3">
                     <button 
-                      className="btn btn-warning btn-sm me-2"
-                      onClick={() => handleUpdateClick(vehicle, 'status')}
-                    >
-                      🔧 Cập nhật trạng thái
-                    </button>
-                    <button 
                       className="btn btn-info btn-sm"
                       onClick={() => handleUpdateClick(vehicle, 'notes')}
                     >
-                      📝 Cập nhật ghi chú
+                      📝 Cập nhật trạng thái và thông tin phương tiện
                     </button>
                   </div>
                 </div>
@@ -171,7 +166,7 @@ function DriverVehicleInfo() {
 
       {/* Form cập nhật trạng thái */}
       {showUpdateForm && selectedVehicle && (
-        <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+        <center><div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -241,14 +236,14 @@ function DriverVehicleInfo() {
               </div>
             </div>
           </div>
-        </div>
+        </div></center>
       )}
 
       {/* Overlay cho modal */}
       {showUpdateForm && (
         <div className="modal-backdrop fade show"></div>
       )}
-    </div>
+    </div></center>
   );
 }
 

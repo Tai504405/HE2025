@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import './MapRealtime.css';
 
 const statusVN = {
   'READY': 'Sẵn sàng',
@@ -203,9 +204,8 @@ function MapRealtime({ currentUserId, refreshKey }) {
   }
 
   return (
-    <div style={{display:'flex',justifyContent:'center', flexDirection:'column', alignItems:'center'}}>
-      <div id="realtime-map" style={{ height: 400, width: 900, maxWidth:'100%', margin: 'auto' }}></div>
-      <div style={{marginTop: 16, width: 900, maxWidth:'100%'}}>
+    <div className="map-container">
+      <div className="driver-list">
         <h5>Danh sách tài xế đang hoạt động:</h5>
         <ul>
           {uniqueDrivers.length === 0 && <li>Không có tài xế nào đang hoạt động.</li>}
@@ -232,6 +232,7 @@ function MapRealtime({ currentUserId, refreshKey }) {
           })}
         </ul>
       </div>
+      <div id="realtime-map" className="map-area"></div>
     </div>
   );
 }

@@ -17,7 +17,7 @@ const AdminTripManagement = () => {
     // Filters
     const [filters, setFilters] = useState({
         date: '',
-        timeSlot: '',
+        origin: '',
         driverId: '',
         vehicleId: '',
         status: ''
@@ -347,22 +347,26 @@ const AdminTripManagement = () => {
 
     const getStatusColor = (status) => {
         const statusMap = {
+            'CREATED': '#6c757d',
             'WAITING': '#ffc107',
             'BOARDING': '#17a2b8',
             'RUNNING': '#28a745',
             'COMPLETED': '#6c757d',
-            'CANCELLED': '#dc3545'
+            'CANCELLED': '#dc3545',
+            'FINISHED': '#6c757d'
         };
         return statusMap[status] || '#6c757d';
     };
 
     const getStatusText = (status) => {
         const statusMap = {
+            'CREATED': 'Đã tạo',
             'WAITING': 'Chờ khởi hành',
             'BOARDING': 'Đang lên xe',
             'RUNNING': 'Đang chạy',
             'COMPLETED': 'Hoàn thành',
-            'CANCELLED': 'Đã hủy'
+            'CANCELLED': 'Đã hủy',
+            'FINISHED': 'Đã kết thúc'
         };
         return statusMap[status] || status;
     };
@@ -412,12 +416,6 @@ const AdminTripManagement = () => {
                     >
                         ➕ Tạo chuyến đi mới
                     </button>
-                    <button 
-                        className="btn btn-secondary" 
-                        onClick={() => setShowReport(true)}
-                    >
-                        📊 Báo cáo
-                    </button>
                 </div>
             </div>
 
@@ -428,20 +426,15 @@ const AdminTripManagement = () => {
             <div className="filters">
                 <h3>🔍 Bộ lọc</h3>
                 <div className="filter-row">
-                    <input
-                        type="date"
-                        placeholder="Ngày"
-                        value={filters.date}
-                        onChange={(e) => setFilters({...filters, date: e.target.value})}
-                    />
+                    
                     <select
-                        value={filters.timeSlot}
-                        onChange={(e) => setFilters({...filters, timeSlot: e.target.value})}
+                        value={filters.origin}
+                        onChange={(e) => setFilters({...filters, origin: e.target.value})}
                     >
-                        <option value="">Tất cả ca</option>
-                        <option value="Sáng">Sáng</option>
-                        <option value="Trưa">Trưa</option>
-                        <option value="Chiều">Chiều</option>
+                        <option value="">Tất cả điểm đi</option>
+                        {stationsFixed.map(station => (
+                            <option key={station.code} value={station.code}>{station.name}</option>
+                        ))}
                     </select>
                     <select
                         value={filters.driverId}
@@ -466,9 +459,12 @@ const AdminTripManagement = () => {
                         onChange={(e) => setFilters({...filters, status: e.target.value})}
                     >
                         <option value="">Tất cả trạng thái</option>
+                        <option value="CREATED">Đã tạo</option>
                         <option value="WAITING">Chờ khởi hành</option>
                         <option value="BOARDING">Đang lên xe</option>
                         <option value="RUNNING">Đang chạy</option>
+                        <option value="COMPLETED">Hoàn thành</option>
+                        <option value="CANCELLED">Đã hủy</option>
                         <option value="FINISHED">Đã kết thúc</option>
                     </select>
                 </div>
@@ -493,7 +489,37 @@ const AdminTripManagement = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {trips.map(trip => (
+                            {trips
+                                .filter(trip => {
+                                    // Lọc theo ngày
+                                    if (filters.date && trip.startedAt) {
+                                        const tripDate = new Date(trip.startedAt).toISOString().split('T')[0];
+                                        if (tripDate !== filters.date) return false;
+                                    }
+                                    
+                                    // Lọc theo điểm đi
+                                    if (filters.origin && trip.origin !== filters.origin) {
+                                        return false;
+                                    }
+                                    
+                                    // Lọc theo tài xế
+                                    if (filters.driverId && trip.driver?.id?.toString() !== filters.driverId.toString()) {
+                                        return false;
+                                    }
+                                    
+                                    // Lọc theo xe
+                                    if (filters.vehicleId && trip.vehicle?.id?.toString() !== filters.vehicleId.toString()) {
+                                        return false;
+                                    }
+                                    
+                                    // Lọc theo trạng thái
+                                    if (filters.status && trip.status !== filters.status) {
+                                        return false;
+                                    }
+                                    
+                                    return true;
+                                })
+                                .map(trip => (
                                 <tr key={trip.id}>
                                     <td>{trip.id}</td>
                                     <td>{trip.driver?.name || 'N/A'}</td>

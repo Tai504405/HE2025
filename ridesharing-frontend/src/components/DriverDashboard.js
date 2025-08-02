@@ -19,7 +19,7 @@ function getUser() {
   }
 }
 
-function DriverDashboard() {
+function DriverDashboard({ activeTab, setActiveTab }) {
   const user = getUser();
   const [tripId, setTripId] = useState(null);
   const [busState, setBusState] = useState('idle');
@@ -28,7 +28,6 @@ function DriverDashboard() {
   const [busStatus, setBusStatus] = useState('IDLE');
   const [routePoints, setRoutePoints] = useState([]); // polyline các đoạn đường thực tế
   const [tripEnded, setTripEnded] = useState(false);
-  const [activeTab, setActiveTab] = useState('control');
   const animateRef = useRef();
   const [pendingTrip, setPendingTrip] = useState(null); // chuyến đi mới cần xác nhận
   const [confirmed, setConfirmed] = useState(false);
@@ -347,28 +346,8 @@ function DriverDashboard() {
 
   return (
     <div className="container mt-4">
-      <h2>Dashboard Tài xế</h2>
-      <h4>Xin chào, {user?.name || "Tài xế"}!</h4>
-      
-      {/* Navigation tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'control' ? 'active' : ''}`}
-            onClick={() => setActiveTab('control')}
-          >
-            Điều khiển xe bus
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'vehicle' ? 'active' : ''}`}
-            onClick={() => setActiveTab('vehicle')}
-          >
-            Thông tin phương tiện
-          </button>
-        </li>
-      </ul>
+      <center><h2>Dashboard Tài xế</h2>
+      <h4>Xin chào, {user?.name || "Tài xế"}!</h4></center>
 
       {/* Control Tab */}
       {activeTab === 'control' && (

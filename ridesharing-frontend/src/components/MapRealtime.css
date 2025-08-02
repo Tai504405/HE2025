@@ -1,0 +1,34 @@
+.map-container {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 0px;
+}
+
+.driver-list {
+  width: 20%;
+  min-width: 250px;
+}
+
+.map-area {
+  height: 70vh;
+  width: 80%;
+  min-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .map-container {
+    flex-direction: column !important;
+  }
+  .driver-list {
+    width: 100% !important;
+    order: 2;
+  }
+  .map-area {
+    width: 100% !important;
+    height: 70vh !important;
+    order: 1;
+  }
+} 

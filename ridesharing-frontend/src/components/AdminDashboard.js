@@ -6,12 +6,11 @@ import AdminUserManagement from "./AdminUserManagement";
 import AdminTripManagement from "./AdminTripManagement";
 import ShiftManagement from "./ShiftManagement";
 
-function AdminDashboard() {
+function AdminDashboard({ activeTab, setActiveTab }) {
   const [users, setUsers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [reportRoute, setReportRoute] = useState({});
   const [reportSchedule, setReportSchedule] = useState({});
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
 
   // Hàm load dữ liệu
@@ -64,44 +63,8 @@ function AdminDashboard() {
 
   return (
     <div className="container mt-4">
-      <h2>Quản trị hệ thống</h2>
+      <center><h2>Quản trị hệ thống</h2></center>
       
-      {/* Navigation tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            Dashboard
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'trips' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trips')}
-          >
-            Quản lý chuyến đi
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'vehicles' ? 'active' : ''}`}
-            onClick={() => setActiveTab('vehicles')}
-          >
-            Quản lý phương tiện
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
-          >
-            Quản lý tài khoản
-          </button>
-        </li>
-      </ul>
-
       {/* Loading indicator chỉ hiển thị khi load lần đầu hoặc thao tác thủ công */}
       {loading && (
         <div className="alert alert-info">
@@ -112,9 +75,7 @@ function AdminDashboard() {
       {/* Dashboard Tab */}
       {activeTab === 'dashboard' && (
         <div>
-          
-          
-          <h4>Giám sát xe trên bản đồ</h4>
+          <center><h4>Giám sát xe trên bản đồ</h4></center>
           <MapRealtime />
         </div>
       )}
